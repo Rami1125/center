@@ -3,21 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Chosen Palette: Main catalog now light blue/white with bold text. Advisor Modal retains enhanced glassmorphism. -->
-    <!-- Application Structure Plan: The core SPA remains kiosk-centric with a filter sidebar and product grid, now with a refreshed light blue and white theme. The "Advanced Product Advisor" modal is significantly enhanced: it now provides concise answers, offers dynamic follow-up actions (expand details, related products), remembers chat history, and can display tables/emojis. Image fetching from Google Search is integrated for product visuals. The button to open it is centralized and uses an advanced POPUP style. The order system with WhatsApp remains. This structure provides a highly sophisticated AI-driven consultation experience alongside a visually appealing and functional product catalog. -->
-    <!-- Visualization & Content Choices:
-        - Product Catalog & Filtering: Goal -> Visually refreshed catalog with light blue/white theme. Viz/Presentation -> Updated product cards, filters, and search bar with new color scheme and bold text. Interaction -> Filters and search instantly update the grid. Justification -> Modernized, clearer interface.
-        - Product Detail Modal: Goal -> Consistent styling within the new theme. Viz/Presentation -> Maintains glassmorphism but with updated text colors and button styles to match. Interaction -> Tabs for detailed info, quantity calculator. Justification -> Retains functional richness with updated aesthetics.
-        - Dynamic Quantity Calculator: Goal -> Functional, clear. Viz/Presentation -> Styled inputs and result display within the modal. Interaction -> Real-time calculation. Justification -> Essential professional tool.
-        - Barcode Scanning: Goal -> Quick lookup. Viz/Presentation -> Button, simple prompt. Interaction -> User input, product display. Justification -> Streamlined in-store lookup.
-        - Advanced Product Advisor (LLM Feature - Major Update): Goal -> Concise, precise, interactive AI advice with chat memory. Viz/Presentation -> Dedicated modal (light blue/white glassmorphism) with typing effect, emojis, and dynamic buttons for follow-up questions ("הרחב", "מוצרים נלווים"). The modal features a sophisticated POPUP behavior for opening/closing. Interaction -> User query, AI responds briefly, then prompts for deeper engagement. Chat history persists across modal openings. Justification -> Addresses previous feedback for conciseness and adds significant interactivity and depth to AI consultation.
-        - WhatsApp Ordering: Goal -> Streamlined submission. Viz/Presentation -> Standard cart modal leading to a WhatsApp link. Interaction -> User fills form, redirects to WhatsApp. Justification -> Simplified ordering process.
-        - Image Fetching: Goal -> Display richer product images. Viz/Presentation -> Dynamically loaded images from Google Search in product cards and modals. Interaction -> Automatic. Justification -> Enhances visual appeal and product representation.
-        - Brand Logos: Goal -> Display brand logos. Viz/Presentation -> Small logo on product cards and in product modal. Interaction -> Passive display. Justification -> Visual identification of brands.
-        - Company Logo: Goal -> Display H.Saban logo. Viz/Presentation -> Prominently placed in header. Interaction -> Passive display. Justification -> Branding.
-        - Branch Gallery: Goal -> Showcase store images. Viz/Presentation -> New modal with grid layout, filter buttons. Interaction -> Open modal, filter images. Justification -> Provides visual context for branches.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <title>קטלוג פרימיום אינטראקטיבי - ח.סבן חומרי בניין</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,6 +14,7 @@
             font-family: 'Assistant', sans-serif;
             background: linear-gradient(to bottom right, #e0f2f7, #ffffff); /* Light blue to white gradient */
             color: #1a202c; /* Darker text for contrast */
+            overflow-x: hidden; /* Prevent horizontal scroll due to animations */
         }
         .main-container {
             direction: rtl;
@@ -50,7 +36,10 @@
         }
         .product-card:hover {
              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+             border-color: #90CAF9; /* Subtle highlight on hover */
         }
+
+        /* Modal specific styles for animation and centering */
         .modal {
             @apply fixed inset-0 flex items-center justify-center p-4 z-50;
             background: rgba(0, 0, 0, 0.5);
@@ -61,23 +50,68 @@
             pointer-events: none;
         }
         .modal-content-wrapper {
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform: scale(0.9) translateY(20px);
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); /* Slightly longer transition */
+            transform: scale(0.8) translateY(20px); /* Start slightly smaller and lower */
             opacity: 0;
         }
         .modal:not(.hidden) .modal-content-wrapper {
-            transform: scale(1) translateY(0);
+            transform: scale(1) translateY(0); /* End at full size and center */
             opacity: 1;
         }
-        .modal-content {
-            @apply glass-effect rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col;
+        .modal-content, .advisor-modal-content, .gallery-modal-content, .keyboard-modal-content {
+            @apply glass-effect rounded-3xl shadow-2xl w-full max-h-[95vh] flex flex-col relative;
+            background-image: url('https://i0.wp.com/saban94.wordpress.com/wp-content/uploads/2020/01/cropped-22489661_366092580492942_6527060566628824285_n-1.jpg?resize=200%2C200&ssl=1');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 50%; /* Adjusted for better visibility */
+            background-blend-mode: overlay; /* Blends logo with background */
         }
+        .modal-content > *, .advisor-modal-content > *, .gallery-modal-content > *, .keyboard-modal-content > * {
+             position: relative; /* Ensure content is above the background image */
+             z-index: 10;
+        }
+        .modal-content::before, .advisor-modal-content::before, .gallery-modal-content::before, .keyboard-modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9); /* Opaque white layer over background image */
+            backdrop-filter: blur(10px); /* Ensures a good glass effect */
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: inherit; /* Inherit rounded corners */
+            z-index: 5; /* Below content, above background image */
+        }
+        
+        /* Specific modal header adjustments */
+        .modal-content header, .advisor-modal-header, .gallery-modal-header, .keyboard-modal-header {
+             z-index: 11; /* Ensure headers are always on top */
+             position: relative;
+        }
+
+
+        /* Updated Tab Buttons with Glass Effect */
         .tab-button {
-            @apply px-5 py-3 font-semibold text-gray-600 border-b-4 border-transparent hover:bg-blue-50 hover:bg-opacity-50 hover:text-blue-700 transition-all duration-300;
+            @apply px-5 py-3 text-lg font-semibold rounded-xl shadow-sm cursor-pointer; /* More rounded, subtle shadow */
+            @apply ml-4; /* Add spacing between buttons */
+            background: rgba(255, 255, 255, 0.8); /* Slightly more opaque glass */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Lighter border for glass look */
+            color: #2563EB; /* Blue text for normal state */
+            transition: all 0.3s ease-in-out;
+        }
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.95); /* More opaque on hover */
+            border-color: #90CAF9; /* Light blue border on hover */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Stronger shadow on hover */
         }
         .tab-button.active {
-            @apply text-blue-700 border-blue-500;
+            @apply bg-blue-600 text-white shadow-md border-blue-600; /* Active state: strong blue background, white text, solid border */
+            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); /* Even stronger shadow for active */
         }
+
         .typing-effect::after {
             content: '|';
             animation: blink 1s step-end infinite;
@@ -91,45 +125,46 @@
         ::-webkit-scrollbar-thumb { background: #90CAF9; border-radius: 4px; } /* Light blue scrollbar */
         ::-webkit-scrollbar-thumb:hover { background: #2196F3; } /* Darker blue on hover */
 
-        /* New Advisor Modal Styles */
+        /* New Advisor Modal Styles - Adjusted for clarity and text size */
         .advisor-modal-content {
             background: rgba(255, 255, 255, 0.95); /* More opaque white */
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(173, 216, 230, 0.7); /* Light blue border */
             @apply rounded-3xl shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col;
         }
         .advisor-modal-header {
             @apply bg-gradient-to-br from-[#ADD8E6] to-[#87CEEB] text-white p-6 rounded-t-3xl;
             border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
         }
         .advisor-input-area {
-            @apply bg-white bg-opacity-80 border border-blue-200 focus:ring-blue-300;
+            @apply bg-white bg-opacity-90 border border-blue-300 focus:ring-2 focus:ring-blue-500 text-lg; /* Larger text */
         }
         .advisor-response-area {
-            @apply bg-blue-50 bg-opacity-70 border border-blue-200 text-blue-800;
+            @apply bg-blue-50 bg-opacity-70 border border-blue-200 text-blue-800 text-lg; /* Larger text */
         }
         .advisor-loading-spinner {
             border-color: #87CEEB;
             border-top-color: transparent;
         }
         .chat-message {
-            @apply p-3 rounded-lg my-2 max-w-[85%];
+            @apply p-4 rounded-xl my-2 max-w-[85%] text-lg; /* Larger padding, bolder radius, larger text */
+            line-height: 1.6; /* Improved readability */
         }
         .chat-message.user {
-            @apply bg-blue-100 text-blue-900 self-end ml-auto;
+            @apply bg-blue-100 text-blue-900 self-end ml-auto shadow-md; /* Subtle shadow */
         }
         .chat-message.ai {
-            @apply bg-gray-100 text-gray-800 self-start mr-auto;
+            @apply bg-gray-100 text-gray-800 self-start mr-auto shadow-md; /* Subtle shadow */
         }
         .chat-message.ai strong {
             color: #2563EB; /* Make strong text blue in AI responses */
         }
         .chat-options-container {
-            @apply flex flex-wrap gap-2 mt-3;
+            @apply flex flex-wrap gap-3 mt-4; /* Larger gap */
         }
         .chat-option-button {
-            @apply bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-300 transition-colors;
+            @apply bg-blue-200 text-blue-800 px-4 py-2 rounded-full text-base hover:bg-blue-300 transition-colors shadow-sm; /* Larger padding, base text */
         }
         table {
             width: 100%;
@@ -144,23 +179,16 @@
             padding: 0.75rem;
             text-align: right;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 1rem; /* Base font size for tables */
         }
         th {
             background-color: #e0f2f7; /* Light blue header */
             font-weight: bold;
             color: #2563eb;
         }
-        tr:last-child td {
-            border-bottom: none;
-        }
-        tr:nth-child(even) {
-            background-color: rgba(240, 248, 255, 0.5); /* Alice Blue subtle stripe */
-        }
         /* Gallery modal specific styles */
         .gallery-modal-content {
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(173, 216, 230, 0.7);
             @apply rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col;
         }
@@ -170,6 +198,88 @@
         .gallery-image-card img {
             @apply w-full h-40 object-cover;
         }
+
+        /* H.Saban logo frame */
+        .saban-logo-frame {
+            @apply p-2 rounded-full bg-white bg-opacity-70 shadow-lg border border-blue-200;
+        }
+
+        /* Product Datasheet Button */
+        .btn-datasheet {
+            @apply bg-green-500 text-white font-bold py-2 px-5 rounded-full shadow-md hover:bg-green-600 transition-colors text-sm;
+        }
+
+        /* Virtual Keyboard */
+        .keyboard-modal {
+            @apply fixed bottom-0 left-0 right-0 p-4 z-50;
+            background: rgba(0, 0, 0, 0.6);
+            transition: all 0.4s ease-in-out;
+            transform: translateY(100%);
+            opacity: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .keyboard-modal.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .keyboard-modal-content {
+            @apply bg-white bg-opacity-95 rounded-t-3xl shadow-2xl w-full max-w-4xl p-6 flex flex-col;
+            border-top: 1px solid rgba(173, 216, 230, 0.7);
+            z-index: 55; /* Higher than other modals to ensure it's on top */
+            background-image: url('https://i0.wp.com/saban94.wordpress.com/wp-content/uploads/2020/01/cropped-22489661_366092580492942_6527060566628824285_n-1.jpg?resize=200%2C200&ssl=1');
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            background-size: 30%;
+            background-blend-mode: overlay;
+        }
+        .keyboard-layout {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(10, 1fr); /* Default 10 columns */
+        }
+        .keyboard-layout.hebrew {
+            grid-template-columns: repeat(11, 1fr); /* Hebrew has more keys in top row */
+        }
+        .keyboard-key {
+            @apply bg-blue-100 text-blue-800 font-semibold p-3 rounded-lg shadow-sm hover:bg-blue-200 active:bg-blue-300 transition-all text-xl flex items-center justify-center cursor-pointer;
+            min-width: 40px;
+            height: 55px; /* Fixed height for keys */
+        }
+        .keyboard-key.wide {
+            grid-column: span 2;
+        }
+        .keyboard-key.extra-wide {
+            grid-column: span 3;
+        }
+        .keyboard-key.space {
+            grid-column: span 5;
+        }
+        .keyboard-header {
+            @apply flex justify-between items-center pb-4 border-b border-blue-200 mb-4;
+        }
+        .keyboard-header button {
+            @apply text-blue-700 hover:text-blue-900 text-3xl font-bold;
+        }
+        .keyboard-header .lang-toggle {
+            @apply bg-blue-500 text-white px-3 py-1 rounded-full text-base font-semibold hover:bg-blue-600 transition-colors;
+        }
+        .keyboard-header .emoji-toggle {
+            @apply bg-yellow-400 text-gray-800 px-3 py-1 rounded-full text-base font-semibold hover:bg-yellow-500 transition-colors;
+        }
+
+        /* Focus state for input with keyboard */
+        .input-with-keyboard-active {
+             outline: 2px solid #2563EB;
+             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+             border-color: #2563EB;
+             transform: translateY(-50px); /* Move input up to center with keyboard below */
+             transition: transform 0.3s ease-out;
+        }
+        .input-with-keyboard-active + .keyboard-modal {
+             transform: translateY(0);
+             opacity: 1;
+        }
     </style>
 </head>
 <body class="main-container">
@@ -177,12 +287,14 @@
     <div id="app" class="min-h-screen">
         <header class="glass-effect shadow-md p-4 flex justify-between items-center sticky top-0 z-40">
             <div class="flex items-center">
-                <img src="https://i0.wp.com/saban94.wordpress.com/wp-content/uploads/2020/01/cropped-22489661_366092580492942_6527060566628824285_n-1.jpg?resize=200%2C200&ssl=1" alt="לוגו ח.סבן" class="h-16 w-16 mr-3 rounded-full object-cover">
-                <h1 class="text-3xl font-bold text-blue-800">ח.סבן חומרי בניין</h1>
+                <div class="saban-logo-frame">
+                    <img src="https://i0.wp.com/saban94.wordpress.com/wp-content/uploads/2020/01/cropped-22489661_366092580492942_6527060566628824285_n-1.jpg?resize=200%2C200&ssl=1" alt="לוגו ח.סבן" class="h-16 w-16 rounded-full object-cover">
+                </div>
+                <h1 class="text-3xl font-bold text-blue-800 mr-3">ח.סבן חומרי בניין</h1>
             </div>
             <div class="flex items-center space-x-4 space-x-reverse">
                 <div class="relative">
-                    <input id="searchInput" type="text" placeholder="הקלד לחיפוש מוצר..." class="w-64 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 glass-effect">
+                    <input id="searchInput" type="text" placeholder="הקלד לחיפוש מוצר..." class="w-64 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 glass-effect text-lg">
                     <span id="searchIcon" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 </div>
                 <button id="projectAdvisorButton" class="btn-secondary">✨ יועץ מוצר מתקדם ✨</button>
@@ -201,12 +313,12 @@
                 <h2 class="text-2xl font-bold mb-6 border-b border-gray-300 pb-3 text-blue-800">סינון מוצרים</h2>
                 <div id="filters">
                     <div>
-                        <h3 class="font-bold text-lg mb-3 text-blue-700">קטגוריה</h3>
-                        <div id="categoryFilters" class="space-y-2"></div>
+                        <h3 class="font-bold text-xl mb-3 text-blue-700">קטגוריה</h3>
+                        <div id="categoryFilters" class="space-y-2 text-lg"></div>
                     </div>
                     <div class="mt-8">
-                        <h3 class="font-bold text-lg mb-3 text-blue-700">מותג</h3>
-                        <div id="brandFilters" class="space-y-2"></div>
+                        <h3 class="font-bold text-xl mb-3 text-blue-700">מותג</h3>
+                        <div id="brandFilters" class="space-y-2 text-lg"></div>
                     </div>
                      <div class="mt-8">
                         <button id="clearFilters" class="w-full btn-secondary">נקה סינונים</button>
@@ -220,7 +332,7 @@
     </div>
 
     <div id="productModal" class="modal hidden">
-        <div id="modalContentWrapper" class="modal-content-wrapper">
+        <div id="modalContentWrapper" class="modal-content-wrapper w-full max-w-5xl">
              <!-- Content will be injected by JS -->
         </div>
     </div>
@@ -228,18 +340,18 @@
     <div id="cartModal" class="modal hidden">
          <div class="modal-content-wrapper w-full max-w-2xl">
             <div class="modal-content">
-                 <header class="p-6 border-b border-gray-300 flex justify-between items-center">
-                    <h2 class="text-3xl font-bold text-blue-800">ההזמנה שלי</h2>
-                    <button id="closeCartModal" class="text-3xl font-bold text-gray-500 hover:text-red-500 transition-colors">&times;</button>
+                 <header class="p-6 border-b border-gray-300 flex justify-between items-center bg-gradient-to-br from-[#ADD8E6] to-[#87CEEB] text-white rounded-t-3xl">
+                    <h2 class="text-3xl font-bold">ההזמנה שלי</h2>
+                    <button id="closeCartModal" class="text-3xl font-bold text-white hover:text-red-300 transition-colors">&times;</button>
                 </header>
-                <div id="cartItemsContainer" class="p-6 overflow-y-auto flex-grow">
+                <div id="cartItemsContainer" class="p-6 overflow-y-auto flex-grow text-lg">
                 </div>
-                <footer class="p-6 border-t border-gray-200 bg-white bg-opacity-30">
-                     <h3 class="text-xl font-bold mb-4 text-blue-700">פרטי מילוי הזמנה</h3>
+                <footer class="p-6 border-t border-blue-200 bg-white bg-opacity-90 rounded-b-3xl">
+                     <h3 class="text-2xl font-bold mb-4 text-blue-700">פרטי מילוי הזמנה</h3>
                      <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <input type="text" placeholder="שם מלא" id="customerName" class="p-3 border rounded-lg bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500" required>
-                         <input type="tel" placeholder="מספר טלפון" id="customerPhone" class="p-3 border rounded-lg bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500" required>
-                         <textarea placeholder="הערות להזמנה..." rows="2" id="orderNotes" class="p-3 border rounded-lg md:col-span-2 bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500"></textarea>
+                         <input type="text" placeholder="שם מלא" id="customerName" class="p-3 border rounded-lg bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500 text-lg" required>
+                         <input type="tel" placeholder="מספר טלפון" id="customerPhone" class="p-3 border rounded-lg bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500 text-lg" required>
+                         <textarea placeholder="הערות להזמנה..." rows="2" id="orderNotes" class="p-3 border rounded-lg md:col-span-2 bg-white bg-opacity-90 border-blue-300 focus:ring-2 focus:ring-blue-500 text-lg"></textarea>
                          <button type="submit" class="btn-primary md:col-span-2 mt-2">שלח הזמנה לוואטסאפ</button>
                      </form>
                 </footer>
@@ -260,13 +372,13 @@
                         שלום! אני יועץ המוצר המתקדם של ח.סבן חומרי בניין. איך אוכל לעזור לך היום? 😊
                     </div>
                 </div>
-                <footer class="p-6 border-t border-blue-200 bg-white bg-opacity-90">
+                <footer class="p-6 border-t border-blue-200 bg-white bg-opacity-90 rounded-b-3xl">
                     <div class="mb-4">
                         <textarea id="projectAdvisorInput" class="advisor-input-area w-full p-3 border rounded-lg h-20 resize-none" placeholder="תאר את הפרויקט שלך או שאל שאלה על חומרים..."></textarea>
                     </div>
                     <button id="getAdvisorAdvice" class="btn-primary w-full">קבל ייעוץ</button>
-                    <div id="advisorLoading" class="hidden mt-4 text-center text-blue-600">
-                        <span class="inline-block h-6 w-6 border-4 border-t-4 rounded-full animate-spin advisor-loading-spinner"></span>
+                    <div id="advisorLoading" class="hidden mt-4 text-center text-blue-600 text-lg">
+                        <span class="inline-block h-6 w-6 border-4 border-t-4 rounded-full animate-spin advisor-loading-spinner mr-2"></span>
                         <span class="mr-2">טוען ייעוץ...</span>
                     </div>
                 </footer>
@@ -295,13 +407,22 @@
         </div>
     </div>
 
-    <script>
-        // Use google_search tool to fetch product images.
-        // Product data will be enhanced with image URLs from the internet.
-        // It will provide concise AI answers and then offer to expand on details or find related products.
-        // It will remember chat history within the session.
-        // It will have a light blue/white premium design with bold text and glassmorphism.
+    <div id="virtualKeyboard" class="keyboard-modal">
+        <div class="keyboard-modal-content">
+            <div class="keyboard-header">
+                <button id="closeKeyboard" class="text-gray-600 hover:text-red-500">&times;</button>
+                <div class="flex gap-2">
+                    <button id="toggleLang" class="lang-toggle">עב/EN</button>
+                    <button id="toggleEmoji" class="emoji-toggle">😀</button>
+                </div>
+            </div>
+            <div id="keyboardLayout" class="keyboard-layout">
+                <!-- Keys will be injected here -->
+            </div>
+        </div>
+    </div>
 
+    <script>
         // Initial product data (will be enhanced with images dynamically)
         const products = [
             {
@@ -312,6 +433,7 @@
                 image: "https://termokir.co.il/wp-content/uploads/2020/05/th300-lca-218x345.jpg", // Updated image
                 category: "טיח",
                 description: "טיח תרמי איכותי לבידוד תרמי של מבנים, עומד בתקנים מחמירים.",
+                datasheet_url: "https://termokir.co.il/product/%D7%98%D7%99%D7%97-%D7%AA%D7%A8%D7%9E%D7%99-300-th/",
                 specs: {
                     "צפיפות יבשה": "פחות מ-300 ק\"ג/מ\"ק",
                     "מוליכות תרמית": "0.085 W/(m*k)",
@@ -349,9 +471,10 @@
                 image: "https://termokir.co.il/wp-content/uploads/2014/01/0005_AD603.jpg", // Updated image
                 category: "דבקים לריצוף",
                 description: "דבק צמנטי גמיש להדבקת אריחים, סיווג C2TE S1.",
+                datasheet_url: "https://termokir.co.il/product/%D7%93%D7%91%D7%A7-ad-603/",
                 specs: {
                     "סיווג": "C2TE S1",
-                    "חוזק הידבקות במתיחה": "מעל 1.0-1.5 מגפ\"ס",
+                    "חוזק הידבקות במתיחה": "מעל 1.0-1.5 מגפ\"S",
                     "עיווי רוחבי (גמישות)": "> 2.5 מ\"מ",
                     "עובי יישום": "5-10 מ\"מ",
                     "תקנים": "ת\"י 4004, ת\"י 1555, תו ירוק",
@@ -381,9 +504,10 @@
                 id: 3,
                 name: "כרמית דבק גמיש 116",
                 brand: "כרמית מיסטר פיקס",
-                brand_logo_url: "https://www.carmit-mrfix.com/wp-content/uploads/2023/12/%D7%93%D7%91%D7%A7-%D7%92%D7%9E%D7%99%D7%A9-116-%D7%A4%D7%A8%D7%99%D7%9E%D7%99%D7%95%D7%9D-C2TE-S1.png",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Karmit_logo.svg/320px-Karmit_logo.svg.png",
                 category: "דבקים לריצוף",
                 description: "דבק צמנטי גמיש במיוחד להדבקת כל סוגי האריחים, סיווג C2TE-S1.",
+                datasheet_url: "https://www.karmit.co.il/product/%D7%93%D7%91%D7%A7-%D7%90%D7%A8%D7%99%D7%97%D7%99%D7%9D-%D7%97%D7%92%D7%9E%D7%99%D7%A9-116-c2te-s1/",
                 specs: {
                     "סיווג": "C2TE-S1",
                     "חוזק הידבקות במתיחה": "מעל 1 מגפ\"ס",
@@ -416,9 +540,10 @@
                 id: 4,
                 name: "טמבור טיח צמנטי 984",
                 brand: "טמבור",
-                brand_logo_url: "https://tambour.co.il/wp-content/uploads/2018/06/984_web1.jpg",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Tambour_logo.svg/320px-Tambour_logo.svg.png",
                 category: "טיח",
                 description: "טיח על בסיס צמנט ליישור קירות ותקרות במרחבים מוגנים (ממ\"ד).",
+                datasheet_url: "https://www.tambour.co.il/product/%D7%98%D7%99%D7%97-%D7%A6%D7%9E%D7%A0%D7%98%D7%99-984/",
                 specs: {
                     "צריכה אופיינית": "1.7 ק\"ג/מ\"ר לעובי 1 מ\"מ",
                     "שימוש": "קירות פנים וחוץ, ממ\"דים",
@@ -446,9 +571,10 @@
                 id: 5,
                 name: "נירלט שליכט EXTRA M100",
                 brand: "נירלט",
-                brand_logo_url: "https://nirlat.com/wp-content/uploads/2012/06/%D7%A9%D7%9C%D7%99%D7%9B%D7%98-100.png",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Nirlat_logo.svg/320px-Nirlat_logo.svg.png",
                 category: "טיח",
                 description: "שליכט אקרילי גמיש בגימור מט, עמיד בתנאי אקלים קשים.",
+                datasheet_url: "https://www.nirlat.com/product/%D7%A9%D7%9C%D7%99%D7%9B%D7%98-extra-m100/",
                 specs: {
                     "כושר כיסוי": "משתנה לפי מרקם (כ-2 ק\"ג/מ\"ר)",
                     "גישור על סדקים": "עד 1 מ\"מ",
@@ -476,9 +602,10 @@
                 id: 6,
                 name: "בוש מברגה/מקדחה GSB 185-LI",
                 brand: "בוש",
-                brand_logo_url: "https://www.ledico.com/wp-content/uploads/2022/12/19K3.100-Ledico.png",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Bosch_logo.svg/320px-Bosch_logo.svg.png",
                 category: "כלי עבודה",
                 description: "מברגה/מקדחה רוטטת נטענת, 18V, קומפקטית עם מנוע ללא פחמים.",
+                datasheet_url: "https://www.bosch-professional.com/il/he/products/gsb-185-li-06019K3100",
                 specs: {
                     "מתח": "18V",
                     "מומנט (רך/קשה)": "21/50 Nm",
@@ -501,6 +628,7 @@
                 brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Makita_logo.svg/320px-Makita_logo.svg.png",
                 category: "כלי עבודה",
                 description: "מברגת אימפקט 18V חזקה ואמינה לעבודות מאומצות (גוף בלבד).",
+                datasheet_url: "https://www.makita.co.il/product/%D7%9E%D7%91%D7%A8%D7%92%D7%AA-%D7%90%D7%99%D7%9E%D7%A4%D7%A7%D7%98-18V-DTD152Z/",
                 specs: {
                     "מתח": "18V",
                     "מהירות סיבוב": "0-2,900 סל\"ד",
@@ -523,9 +651,10 @@
                 brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Tambour_logo.svg/320px-Tambour_logo.svg.png",
                 category: "מוצרי גבס",
                 description: "לוח גבס סטנדרטי לבניית מחיצות, תקרות וחיפויים בבנייה קלה.",
+                datasheet_url: "https://www.tambour.co.il/product/%D7%9C%D7%95%D7%97-%D7%92%D7%91%D7%A1-%D7%9C%D7%91%D7%9F/",
                 specs: {
                     "עובי סטנדרטי": "12.7 מ\"מ (זמין בעוביים נוספים)",
-                    "מידות": "1200x2600/3000 מ\"מ",
+                    "מידות": "1200x2600/3000 מ\"M",
                     "תקנים": "ת\"י 1490, ת\"י 62088, תו ירוק, ISO14001"
                 },
                 application: [
@@ -543,6 +672,7 @@
                 brand_logo_url: "https://termokir.co.il/logo.png",
                 category: "רובה",
                 description: "רובה אקרילית איכותית למילוי מישקים ברוחב 3-10 מ\"מ, סיווג CG2 WA.",
+                datasheet_url: "https://termokir.co.il/product/%D7%A8%D7%95%D7%91%D7%94-sakret-jf-930/",
                 specs: {
                     "סיווג": "CG2 WA",
                     "חוזק לחיצה (28 יום)": "מעל 15.0 מגפ\"ס",
@@ -579,6 +709,7 @@
                 brand_logo_url: "https://gilar.co.il/wp-content/themes/gilar/images/sika.svg",
                 category: "איטום",
                 description: "דבק-איטום פוליאוריטני רב תכליתי, עמיד בפני תזוזות ותנאי חוץ.",
+                datasheet_url: "https://isr.sika.com/he/construction/adhesives-sealants/sealants/sikaflexr-11-fc.html",
                 specs: {
                     "בסיס כימי": "i-Cure® Technology polyurethane",
                     "גמישות": "גבוהה (±35%)",
@@ -605,6 +736,7 @@
                 brand_logo_url: "https://gilar.co.il/wp-content/themes/gilar/images/sika.svg",
                 category: "איטום",
                 description: "מערכת איטום צמנטית דו-רכיבית, גמישה במקצת, לאיטום והגנה על בטון.",
+                datasheet_url: "https://isr.sika.com/he/construction/waterproofing/waterproofing-below-ground/sikaflexr-1a.html", // Placeholder, find actual for Seal-107
                 specs: {
                     "סיווג": "CM O2P (EN 1504-2)",
                     "חוזק הידבקות": ">1.0 מגפ\"ס",
@@ -636,6 +768,7 @@
                 brand_logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz-S4X7_S4z_D1h-j_z2sS1C2v2g7Qy1y_wQ&s",
                 category: "ברזים",
                 description: "ברז יוקרתי לכיור מטבח מבית חמת, עיצוב מודרני, פיה נשלפת וגימור ניקל מוברש.",
+                datasheet_url: "https://www.hamat.co.il/product/%D7%91%D7%A8%D7%96-%D7%9E%D7%98%D7%91%D7%97-%D7%A0%D7%A9%D7%9C%D7%A3-%D7%A1%D7%99%D7%98%D7%99/",
                 specs: {
                     "חומר": "פליז בציפוי כרום/ניקל",
                     "גימור": "ניקל מוברש / כרום / שחור מט",
@@ -659,6 +792,7 @@
                 brand_logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz-S4X7_S4z_D1h-j_z2sS1C2v2g7Qy1y_wQ&s",
                 category: "אינסטלציה",
                 description: "סט מקלחת יוקרתי הכולל ראש גשם, מזלף ידני, ברז סוללה ואינטרפוץ 4 דרך.",
+                datasheet_url: "https://www.hamat.co.il/product/%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A4%D7%95%D7%A5-4-%D7%93%D7%A8%D7%9B%D7%99%D7%9D/",
                 specs: {
                     "חומר": "פליז בציפוי כרום",
                     "גימור": "כרום / שחור מט",
@@ -682,6 +816,7 @@
                 brand_logo_url: "", // No specific logo for "general"
                 category: "חומרי בניין בצובר",
                 description: "חול ים נקי ואיכותי למילוי, יציקות בטון, טיח ותשתיות ריצוף. נמכר בנפח של מעל 0.5 קוב.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "נפח אריזה": "מינימום 0.5 קוב (בלה)",
                     "צבע": "בהיר-אפרפר",
@@ -711,6 +846,7 @@
                 brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "סומסום - חצץ דק בגודל 0-4 מ\"מ, אידיאלי לתשתיות ריצוף וניקוז. נמכר בנפח של מעל 0.5 קוב.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "נפח אריזה": "מינימום 0.5 קוב (בלה)",
                     "צבע": "אפור-בז'",
@@ -740,6 +876,7 @@
                 brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "חצץ נקי בגדלים שונים, אידיאלי ליציקות בטון, ניקוז ומילוי. נמכר בנפח של מעל 0.5 קוב.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "נפח אריזה": "מינימום 0.5 קוב (בלה)",
                     "צבע": "אפור",
@@ -769,6 +906,7 @@
                 brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "טיט צמנטי מוכן לשימוש (יבש), מתאים לטיח, ריצוף ובנייה. נמכר בנפח של מעל 0.5 קוב.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "נפח אריזה": "שק 25 ק\"ג / 0.5 קוב (בלה)",
                     "מרכיבים": "צמנט, חול, תוספים",
@@ -803,6 +941,7 @@
                 brand_logo_url: "",
                 category: "כלי עבודה",
                 description: "מריצה ידנית חזקה ועמידה, אידיאלית להובלת חומרי בניין באתר.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "חומר": "פלדה מגולוונת / פלסטיק מחוזק",
                     "נפח": "80-120 ליטר",
@@ -819,6 +958,7 @@
                 brand_logo_url: "",
                 category: "כלי עבודה",
                 description: "מגב גומי מקצועי ליישום והחלקת רובה, מונע שריטות ומבטיח מילוי אחיד של המישקים.",
+                datasheet_url: "https://did.li/QQ4TY", // Example datasheet URL
                 specs: {
                     "חומר": "ידית פלסטיק, גומי עמיד",
                     "רוחב": "20-25 ס\"מ",
@@ -835,13 +975,13 @@
 
         // Store images for the gallery
         const storeImages = [
-            { src: 'https://saban94.wordpress.com/wp-content/uploads/2020/01/46453331_572490759853122_8215770119347896320_o.jpg?w=150', alt: 'סניף החרש - תמונה 1', branch: 'החרש' }, // Updated
-            { src: 'https://lh3.googleusercontent.com/gps-cs-s/AC9h4nqlBp3hwdZ0DCc5VkRch2XsAFcczEiJpsFv46V298ogtFuufhTcKOgIlKAKc9wu-KP0feUNBzNk7pCO43sZZiw84AAC_ds8tveDgdCR1McM2vDU4BR08jVEcwL7RlqcOejXVbPU-A=s680-w680-h510-rw', alt: 'סניף החרש - תמונה 2', branch: 'החרש' },
-            { src: 'https://lh3.googleusercontent.com/gps-cs-s/AC9h4nqGYOwHRxkJvKdNccy5DmQBCfiXazfJUT8tX0Uvlj2GlCNGZNDOytXKoZuxmOzwAiKVnCQbIJ6rnTUNnggzUFNRYHFwaSheBLYJ2T_5ggfpezNXguQyDnjdGLjptEKzoHkWcTy3Vw=s680-w680-h510-rw', alt: 'סניף החרש - תמונה 3', branch: 'החרש' },
-            { src: 'https://lh3.googleusercontent.com/p/AF1QipOgVXhXUkM2-v-4mKM7sYlXIG_bu5TWtw01kzRv=s680-w680-h510-rw', alt: 'סניף התלמיד - תמונה 1', branch: 'התלמיד' },
-            { src: 'https://lh3.googleusercontent.com/p/AF1QipP-L-0l0QGsJjsiNaC7c7lfUbuJOUs99G22nEc7=s680-w680-h510-rw', alt: 'סניף התלמיד - תמונה 2', branch: 'התלמיד' }, // Updated
-            { src: 'https://lh3.googleusercontent.com/p/AF1QipPOMllf9Sy3iXFChJAdOBV6Zzro0wWW-3Twp2ST=s680-w680-h510-rw', alt: 'סניף התלמיד - תמונה 3', branch: 'התלמיד' },
-            { src: 'https://lh3.googleusercontent.com/gps-cs-s/AC9h4nqjNHZQhRzSv-K0LQpLxS6SDv78owI1i-fAK8kOa-ict6wdGfvcfuw2y-7LH6_GPOSp7e6t5EsCCj3T2DpTfuJNdd1m3Hb42q-C3t3zR1lrndDUBwCwObeGg9itpVtRpJrIfmIE=s680-w680-h510-rw', alt: 'סניף התלמיד - תמונה 4', branch: 'התלמיד' },
+            { src: 'https://saban94.wordpress.com/wp-content/uploads/2020/01/46453331_572490759853122_8215770119347896320_o.jpg?w=150', alt: 'סניף החרש - פנים', branch: 'החרש' }, // Updated
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+החרש+2', alt: 'סניף החרש - חזית', branch: 'החרש' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+החרש+3', alt: 'סניף החרש - מחסן', branch: 'החרש' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+1', alt: 'סניף התלמיד - כניסה', branch: 'התלמיד' },
+            { src: 'https://lh3.googleusercontent.com/p/AF1QipP-L-0l0QGsJjsiNaC7c7lfUbuJOUs99G22nEc7=s680-w680-h510-rw', alt: 'סניף התלמיד - מבחוץ', branch: 'התלמיד' }, // Updated
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+3', alt: 'סניף התלמיד - מחלקת אינסטלציה', branch: 'התלמיד' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+4', alt: 'סניף התלמיד - תצוגה', branch: 'התלמיד' },
         ];
 
 
@@ -861,7 +1001,7 @@
         const scanBarcodeButton = document.getElementById('scanBarcode');
         const orderForm = document.getElementById('orderForm');
         const customerNameInput = document.getElementById('customerName');
-        const customerPhoneInput = document = document.getElementById('customerPhone');
+        const customerPhoneInput = document.getElementById('customerPhone'); // Fixed assignment
         const orderNotesInput = document.getElementById('orderNotes');
 
         const projectAdvisorButton = document.getElementById('projectAdvisorButton');
@@ -877,12 +1017,166 @@
         const closeGalleryModal = document.getElementById('closeGalleryModal');
         const galleryImageContainer = document.getElementById('galleryImageContainer');
 
+        const virtualKeyboard = document.getElementById('virtualKeyboard');
+        const closeKeyboardBtn = document.getElementById('closeKeyboard');
+        const toggleLangBtn = document.getElementById('toggleLang');
+        const toggleEmojiBtn = document.getElementById('toggleEmoji');
+        const keyboardLayoutDiv = document.getElementById('keyboardLayout');
 
         let activeFilters = { category: [], brand: [] };
         let cart = [];
         let currentFilteredProducts = [];
         let currentProductIndexInFilteredList = -1;
         let chatHistory = []; // Stores the full chat conversation
+
+        let activeInput = null; // To track which input field is active for the keyboard
+
+        // Keyboard layouts
+        const layouts = {
+            he: [
+                ['ק', 'ר', 'א', 'ט', 'ו', 'ן', 'ם', 'פ', ']', '['],
+                ['ש', 'ד', 'ג', 'כ', 'ע', 'י', 'ח', 'ל', 'ך', 'ף', ','],
+                ['ז', 'ס', 'ב', 'ה', 'נ', 'מ', 'צ', 'ת', 'ץ', '.', '/'],
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
+                ['@', '#', '$', '%', '&', '*', '(', ')', '_', '+', '='],
+            ],
+            en: [
+                ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '{', '}'],
+                ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '"'],
+                ['z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?'],
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
+                ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '='],
+            ],
+            numbers: [
+                ['7', '8', '9'],
+                ['4', '5', '6'],
+                ['1', '2', '3'],
+                ['0', '.', '='],
+            ],
+            emojis: [
+                ['😀', '😁', '😂', '🤣', '😃', '😄', '�', '😆', '😉', '😊'],
+                ['😋', '😎', '😍', '😘', '😗', '😙', '😚', '🙂', '🤗', '🤔'],
+                ['😮', '🤐', '🙁', '😔', '😪', '🤒', '😷', '🤕', '🤢', '🤮'],
+                ['👍', '👎', '👏', '🙌', '🙏', '❤️', '💔', '🌟', '💡', '🚀'],
+            ]
+        };
+        let currentLayout = 'he';
+        let isEmojiLayout = false;
+
+        function renderKeyboard() {
+            keyboardLayoutDiv.innerHTML = '';
+            const layout = isEmojiLayout ? layouts.emojis : layouts[currentLayout];
+            keyboardLayoutDiv.classList.toggle('hebrew', currentLayout === 'he' && !isEmojiLayout);
+            keyboardLayoutDiv.classList.toggle('english', currentLayout === 'en' && !isEmojiLayout);
+            keyboardLayoutDiv.classList.toggle('emoji', isEmojiLayout);
+
+            layout.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'flex gap-2 mb-2 w-full';
+                row.forEach(key => {
+                    const keyButton = document.createElement('button');
+                    keyButton.className = 'keyboard-key flex-grow';
+                    if (key === ' ') keyButton.className += ' space'; // Special class for space
+                    keyButton.textContent = key;
+                    keyButton.dataset.key = key; // Store key value
+                    keyButton.addEventListener('click', () => handleKeyPress(key));
+                    rowDiv.appendChild(keyButton);
+                });
+                keyboardLayoutDiv.appendChild(rowDiv);
+            });
+
+            // Add special keys (Backspace, Shift, Enter, etc.)
+            const specialKeysRow = document.createElement('div');
+            specialKeysRow.className = 'flex gap-2 mb-2 w-full';
+
+            const backspace = document.createElement('button');
+            backspace.className = 'keyboard-key wide';
+            backspace.innerHTML = '⌫'; // Backspace symbol
+            backspace.addEventListener('click', handleBackspace);
+            specialKeysRow.appendChild(backspace);
+
+            const space = document.createElement('button');
+            space.className = 'keyboard-key space';
+            space.innerHTML = 'רווח'; // Spacebar
+            space.addEventListener('click', () => handleKeyPress(' '));
+            specialKeysRow.appendChild(space);
+
+            const enter = document.createElement('button');
+            enter.className = 'keyboard-key wide';
+            enter.innerHTML = '↵'; // Enter symbol
+            enter.addEventListener('click', handleEnterPress);
+            specialKeysRow.appendChild(enter);
+
+            keyboardLayoutDiv.appendChild(specialKeysRow);
+        }
+
+        function handleKeyPress(key) {
+            if (activeInput) {
+                const start = activeInput.selectionStart;
+                const end = activeInput.selectionEnd;
+                activeInput.value = activeInput.value.substring(0, start) + key + activeInput.value.substring(end);
+                activeInput.selectionStart = activeInput.selectionEnd = start + key.length;
+                activeInput.focus();
+                activeInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger input event for search/filters
+            }
+        }
+
+        function handleBackspace() {
+            if (activeInput) {
+                const start = activeInput.selectionStart;
+                const end = activeInput.selectionEnd;
+                if (start === end && start > 0) {
+                    activeInput.value = activeInput.value.substring(0, start - 1) + activeInput.value.substring(end);
+                    activeInput.selectionStart = activeInput.selectionEnd = start - 1;
+                } else {
+                    activeInput.value = activeInput.value.substring(0, start) + activeInput.value.substring(end);
+                }
+                activeInput.focus();
+                activeInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger input event for search/filters
+            }
+        }
+
+        function handleEnterPress() {
+            if (activeInput && activeInput.id === 'projectAdvisorInput') {
+                getAdvisorAdviceButton.click(); // Trigger advice if it's the advisor input
+            } else if (activeInput && activeInput.id === 'searchInput') {
+                applyFilters(); // Trigger search
+            }
+            // For other inputs, just close keyboard or do nothing specific
+            hideKeyboard();
+        }
+
+        function showKeyboard(inputElement) {
+            if (activeInput) {
+                activeInput.classList.remove('input-with-keyboard-active');
+            }
+            activeInput = inputElement;
+            activeInput.classList.add('input-with-keyboard-active');
+            virtualKeyboard.classList.add('active');
+            activeInput.focus();
+        }
+
+        function hideKeyboard() {
+            if (activeInput) {
+                activeInput.classList.remove('input-with-keyboard-active');
+            }
+            activeInput = null;
+            virtualKeyboard.classList.remove('active');
+        }
+
+        closeKeyboardBtn.addEventListener('click', hideKeyboard);
+
+        toggleLangBtn.addEventListener('click', () => {
+            isEmojiLayout = false;
+            currentLayout = currentLayout === 'he' ? 'en' : 'he';
+            renderKeyboard();
+        });
+
+        toggleEmojiBtn.addEventListener('click', () => {
+            isEmojiLayout = !isEmojiLayout;
+            renderKeyboard();
+        });
+
 
         // Function to fetch image URLs using google_search API (simulated via Gemini)
         async function fetchProductImage(productName, brandName) {
@@ -905,6 +1199,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("API call failed with status:", response.status, "Response text:", errorText);
+                    return `https://placehold.co/400x300/E0F2F7/2563EB?text=Error+Loading`; // Fallback on non-OK response
+                }
+
                 const result = await response.json();
 
                 if (result.candidates && result.candidates.length > 0 &&
@@ -916,9 +1217,12 @@
                     }
                 }
             } catch (error) {
-                console.error("Error fetching image via Gemini API:", error);
+                console.error("Error fetching image via Gemini API (possibly network or parsing JSON):", error);
+                // If the error was from response.json(), and response was not okay,
+                // the `response.text()` in the `if (!response.ok)` block might have caught it.
+                // Otherwise, it's a JSON parsing error on a 200 OK response, or network error.
             }
-            // Fallback to placeholder if no image found or error
+            // Fallback to placeholder if no image found, error, or unexpected LLM response format
             return `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(productName)}`;
         }
 
@@ -934,10 +1238,11 @@
             for (let i = 0; i < products.length; i++) {
                 const product = products[i];
                 // Only fetch if image is not already set (e.g., from provided data) AND not in cache
-                if (!product.image && !imageUrlCache[product.id]) {
+                if (!product.image_fetched && !imageUrlCache[product.id]) { // Use a flag to prevent re-fetching fixed images
                     const imageUrl = await fetchProductImage(product.name, product.brand);
                     imageUrlCache[product.id] = imageUrl;
                     product.image = imageUrl; // Update the product object with fetched image
+                    product.image_fetched = true; // Mark as fetched
                     
                     // Update the specific card's image
                     const cardImage = productCards[i]?.querySelector('.product-main-image');
@@ -960,7 +1265,7 @@
             productGrid.innerHTML = '';
             currentFilteredProducts = productsToRender;
             if (productsToRender.length === 0) {
-                productGrid.innerHTML = `<p class="text-center text-gray-500 col-span-full">לא נמצאו מוצרים התואמים את הסינון.</p>`;
+                productGrid.innerHTML = `<p class="text-center text-gray-500 col-span-full text-xl py-10">לא נמצאו מוצרים התואמים את הסינון.</p>`;
                 return;
             }
             productsToRender.forEach((product, index) => {
@@ -968,13 +1273,13 @@
                 card.className = 'product-card';
                 card.dataset.filteredIndex = index;
                 card.innerHTML = `
-                    <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="w-full h-40 object-cover product-main-image" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
+                    <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="w-full h-40 object-cover product-main-image rounded-t-2xl" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
                     <div class="p-4 flex items-center justify-between">
                         <div>
                             <span class="text-sm text-gray-500">${product.brand}</span>
                             <h3 class="font-bold text-xl mt-1 truncate text-blue-800">${product.name}</h3>
                         </div>
-                        ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-12 h-12 object-contain ml-2" onerror="this.src='https://placehold.co/48x48/CCCCCC/333333?text=Logo'">` : ''}
+                        ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-12 h-12 object-contain ml-2 rounded-lg" onerror="this.src='https://placehold.co/48x48/CCCCCC/333333?text=Logo'">` : ''}
                     </div>
                 `;
                 productGrid.appendChild(card);
@@ -982,13 +1287,13 @@
         }
         
         function createTimeline(dryingData) {
-            let html = '<div class="space-y-4">';
+            let html = '<div class="space-y-4 text-lg">';
             for (const [key, value] of Object.entries(dryingData)) {
                 if (value && typeof value === 'string' && value.trim() !== "") {
                      html += `
                         <div class="flex items-center">
                             <span class="w-1/3 text-gray-600 font-semibold">${key}</span>
-                            <span class="w-2/3 font-bold text-lg text-blue-800">${value}</span>
+                            <span class="w-2/3 font-bold text-blue-800">${value}</span>
                         </div>
                     `;
                 }
@@ -998,7 +1303,7 @@
         }
 
         function createCalculatorHTML(product) {
-            if (!product.calculator) return '<p class="text-center text-gray-500">מחשבון כמות אינו זמין עבור מוצר זה.</p>';
+            if (!product.calculator) return '<p class="text-center text-gray-500 text-lg py-8">מחשבון כמות אינו זמין עבור מוצר זה.</p>';
             
             const { type, unit, bag_weight_kg, coverage_per_sqm_per_mm_kg, min_thickness_mm, max_thickness_mm, coverage_per_sqm, grout_density_factor, default_tile_length_mm, default_tile_width_mm, default_joint_width_mm, default_joint_depth_mm, material_volume_per_sqm_per_mm, volume_per_unit, density_kg_per_m3 } = product.calculator;
 
@@ -1006,49 +1311,49 @@
             if (type === 'coverage_thickness_kg' || type === 'volume_thickness_m3') {
                 inputsHtml = `
                     <div class="mb-4">
-                        <label for="calcArea" class="block text-blue-700 text-sm font-bold mb-2">שטח במ"ר:</label>
-                        <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300">
+                        <label for="calcArea" class="block text-blue-700 text-base font-bold mb-2">שטח במ"ר:</label>
+                        <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300 text-lg">
                     </div>
                     <div class="mb-4">
-                        <label for="calcThickness" class="block text-blue-700 text-sm font-bold mb-2">עובי שכבה במ"מ (${min_thickness_mm}-${max_thickness_mm} מומלץ):</label>
-                        <input type="number" id="calcThickness" value="${min_thickness_mm}" min="${min_thickness_mm}" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300">
+                        <label for="calcThickness" class="block text-blue-700 text-base font-bold mb-2">עובי שכבה במ"מ (${min_thickness_mm}-${max_thickness_mm} מומלץ):</label>
+                        <input type="number" id="calcThickness" value="${min_thickness_mm}" min="${min_thickness_mm}" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300 text-lg">
                     </div>
                 `;
             } else if (type === 'coverage_kg') {
                 inputsHtml = `
                     <div class="mb-4">
-                        <label for="calcArea" class="block text-blue-700 text-sm font-bold mb-2">שטח במ"ר:</label>
-                        <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300">
+                        <label for="calcArea" class="block text-blue-700 text-base font-bold mb-2">שטח במ"ר:</label>
+                        <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300 text-lg">
                     </div>`;
             } else if (type === 'grout_calculator') {
                  inputsHtml = `
                     <div class="grid grid-cols-2 gap-4">
                         <div class="mb-2 col-span-2">
-                            <label for="calcArea" class="block text-blue-700 text-sm font-bold mb-2">שטח ריצוף במ"ר:</label>
-                            <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
+                            <label for="calcArea" class="block text-blue-700 text-base font-bold mb-2">שטח ריצוף במ"ר:</label>
+                            <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300 text-lg">
                         </div>
                         <div class="mb-2">
-                            <label for="calcTileLength" class="block text-blue-700 text-sm font-bold mb-2">אורך אריח (מ"מ):</label>
-                            <input type="number" id="calcTileLength" value="${default_tile_length_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
+                            <label for="calcTileLength" class="block text-blue-700 text-base font-bold mb-2">אורך אריח (מ"מ):</label>
+                            <input type="number" id="calcTileLength" value="${default_tile_length_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300 text-lg">
                         </div>
                         <div class="mb-2">
-                            <label for="calcTileWidth" class="block text-blue-700 text-sm font-bold mb-2">רוחב אריח (מ"מ):</label>
-                            <input type="number" id="calcTileWidth" value="${default_tile_width_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
+                            <label for="calcTileWidth" class="block text-blue-700 text-base font-bold mb-2">רוחב אריח (מ"מ):</label>
+                            <input type="number" id="calcTileWidth" value="${default_tile_width_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300 text-lg">
                         </div>
                         <div class="mb-2">
-                            <label for="calcJointWidth" class="block text-blue-700 text-sm font-bold mb-2">רוחב מישק (מ"מ):</label>
-                            <input type="number" id="calcJointWidth" value="${default_joint_width_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
+                            <label for="calcJointWidth" class="block text-blue-700 text-base font-bold mb-2">רוחב מישק (מ"מ):</label>
+                            <input type="number" id="calcJointWidth" value="${default_joint_width_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300 text-lg">
                         </div>
                         <div class="mb-2">
-                            <label for="calcJointDepth" class="block text-blue-700 text-sm font-bold mb-2">עומק מישק (מ"מ):</label>
-                            <input type="number" id="calcJointDepth" value="${default_joint_depth_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
+                            <label for="calcJointDepth" class="block text-blue-700 text-base font-bold mb-2">עומק מישק (מ"מ):</label>
+                            <input type="number" id="calcJointDepth" value="${default_joint_depth_mm}" min="1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300 text-lg">
                         </div>
                     </div>`;
             }
 
             return `
                 <div class="p-4">
-                    <h3 class="font-bold text-xl mb-4 text-blue-700">מחשבון כמות</h3>
+                    <h3 class="font-bold text-2xl mb-4 text-blue-700">מחשבון כמות</h3>
                     ${inputsHtml}
                     <button id="calculateBtn" class="btn-primary w-full mt-4">חשב כמות</button>
                     <div class="mt-4 p-4 bg-white bg-opacity-70 rounded-lg text-center text-xl font-bold text-blue-800 border border-blue-200">
@@ -1074,7 +1379,7 @@
                             const totalKg = area * thickness * coverage_per_sqm_per_mm_kg;
                             resultText = `${totalKg.toFixed(2)} ק"ג`;
                             if (bag_weight_kg > 0) {
-                                if (unit === 'בלות' && density_kg_per_m3 > 0 && volume_per_unit > 0) {
+                                if (unit === 'בלות' && density_kg_per_m3 > 0 && volume_per_unit > 0) { // Specific calculation for 'bales' unit
                                     const totalKiloBags = Math.ceil(totalKg / bag_weight_kg);
                                     const totalVolume = (totalKg / density_kg_per_m3);
                                     const totalBaleBags = Math.ceil(totalVolume / volume_per_unit);
@@ -1122,7 +1427,10 @@
 
             calculateBtn.onclick = calcFunc;
             const inputs = productModal.querySelectorAll('#tab-calculator input');
-            inputs.forEach(input => input.addEventListener('input', calcFunc));
+            inputs.forEach(input => {
+                input.addEventListener('input', calcFunc);
+                input.addEventListener('focus', () => showKeyboard(input)); // Show keyboard on focus
+            });
             calcFunc();
         }
 
@@ -1131,35 +1439,40 @@
             const product = currentFilteredProducts[filteredIndex];
             if (!product) return;
             
-            const modalContentWrapper = document.getElementById('modalContentWrapper');
             modalContentWrapper.innerHTML = `
                 <div class="modal-content">
-                    <header class="p-6 border-b border-white border-opacity-40 flex justify-between items-start">
+                    <header class="p-6 border-b border-white border-opacity-40 flex justify-between items-start bg-gradient-to-br from-[#ADD8E6] to-[#87CEEB] text-white rounded-t-3xl">
                         <div>
-                            <span class="text-lg text-gray-600 flex items-center">
-                                ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-8 h-8 object-contain mr-2" onerror="this.src='https://placehold.co/32x32/CCCCCC/333333?text=Logo'">` : ''}
+                            <span class="text-xl text-white flex items-center">
+                                ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-8 h-8 object-contain mr-2 rounded-md" onerror="this.src='https://placehold.co/32x32/CCCCCC/333333?text=Logo'">` : ''}
                                 ${product.brand}
                             </span>
-                            <h2 class="text-4xl font-bold text-blue-800">${product.name}</h2>
+                            <h2 class="text-4xl font-bold">${product.name}</h2>
                         </div>
-                        <button id="closeModal" class="text-4xl font-bold text-gray-500 hover:text-red-500 transition-colors">&times;</button>
+                        <button id="closeModal" class="text-4xl font-bold text-white hover:text-red-300 transition-colors">&times;</button>
                     </header>
                     <div class="flex flex-col md:flex-row flex-grow overflow-hidden">
                         <div class="w-full md:w-2/5 p-6">
-                             <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="rounded-2xl shadow-lg w-full object-cover" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
-                             <p class="mt-4 text-gray-700">${product.description}</p>
-                             ${product.warranty ? `<div class="mt-4 p-3 bg-white bg-opacity-70 rounded-lg text-center border border-blue-100"><p class="font-bold text-blue-700">אחריות: ${product.warranty}</p></div>` : ''}
+                             <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="rounded-2xl shadow-lg w-full object-cover border border-blue-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
+                             <p class="mt-4 text-gray-700 text-lg">${product.description}</p>
+                             ${product.warranty ? `<div class="mt-4 p-3 bg-white bg-opacity-70 rounded-lg text-center border border-blue-100 text-lg"><p class="font-bold text-blue-700">אחריות: ${product.warranty}</p></div>` : ''}
+                             ${product.datasheet_url ? `
+                                <div class="mt-4 text-center">
+                                    <p class="text-blue-800 text-lg font-semibold mb-2">לצפייה בתדף המוצר מאתר היצרן:</p>
+                                    <button id="openDatasheet" class="btn-datasheet">לחץ כאן לתדף 📄</button>
+                                </div>
+                             ` : ''}
                         </div>
                         <div class="w-full md:w-3/5 flex flex-col">
-                            <nav id="modalTabs" class="border-b border-blue-200 flex-shrink-0 flex">
+                            <nav id="modalTabs" class="border-b border-blue-200 flex-shrink-0 flex p-2"> <!-- Added p-2 for internal padding of tabs -->
                                 <button data-tab="tab-specs" class="tab-button active">מפרט טכני</button>
                                 <button data-tab="tab-application" class="tab-button">הוראות יישום</button>
                                 ${Object.keys(product.drying).length > 0 ? `<button data-tab="tab-drying" class="tab-button">זמני ייבוש</button>` : ''}
                                 ${product.calculator ? `<button data-tab="tab-calculator" class="tab-button">מחשבון כמות</button>` : ''}
                             </nav>
-                            <div class="p-6 overflow-y-auto flex-grow">
+                            <div class="p-6 overflow-y-auto flex-grow text-lg">
                                 <div id="tab-specs" class="tab-content">
-                                     <h3 class="font-bold text-xl mb-4 text-blue-700">מפרט טכני מלא</h3>
+                                     <h3 class="font-bold text-2xl mb-4 text-blue-700">מפרט טכני מלא</h3>
                                      <div class="space-y-2">
                                         ${Object.entries(product.specs).map(([key, value]) => `
                                             <div class="flex border-b border-blue-100 py-3">
@@ -1169,13 +1482,13 @@
                                      </div>
                                 </div>
                                 <div id="tab-application" class="tab-content hidden">
-                                    <h3 class="font-bold text-xl mb-4 text-blue-700">הוראות יישום</h3>
+                                    <h3 class="font-bold text-2xl mb-4 text-blue-700">הוראות יישום</h3>
                                     <ol class="list-decimal pr-5 space-y-3 text-blue-800">
                                         ${product.application.map(step => `<li>${step}</li>`).join('')}
                                     </ol>
                                 </div>
                                 <div id="tab-drying" class="tab-content hidden">
-                                    <h3 class="font-bold text-xl mb-4 text-blue-700">זמני ייבוש ואשפרה</h3>
+                                    <h3 class="font-bold text-2xl mb-4 text-blue-700">זמני ייבוש ואשפרה</h3>
                                     ${createTimeline(product.drying)}
                                 </div>
                                 <div id="tab-calculator" class="tab-content hidden">
@@ -1184,7 +1497,7 @@
                             </div>
                         </div>
                     </div>
-                     <footer class="p-4 bg-white bg-opacity-70 border-t border-white border-opacity-40 flex justify-between items-center">
+                     <footer class="p-4 bg-white bg-opacity-90 border-t border-white border-opacity-40 flex justify-between items-center rounded-b-3xl">
                         <button id="prevProduct" class="btn-secondary ${currentProductIndexInFilteredList === 0 ? 'opacity-50 cursor-not-allowed' : ''}">⬅️ קודם</button>
                         <button id="addToCart" data-product-id="${product.id}" class="btn-primary">הוסף להזמנה</button>
                         <button id="nextProduct" class="btn-secondary ${currentProductIndexInFilteredList === currentFilteredProducts.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}">הבא ➡️</button>
@@ -1208,6 +1521,12 @@
             document.getElementById('nextProduct').addEventListener('click', () => {
                 if (currentProductIndexInFilteredList < currentFilteredProducts.length - 1) openProductModal(currentProductIndexInFilteredList + 1);
             });
+
+            if (product.datasheet_url) {
+                document.getElementById('openDatasheet').addEventListener('click', () => {
+                    window.open(product.datasheet_url, '_blank');
+                });
+            }
 
             const tabs = productModal.querySelectorAll('.tab-button');
             const tabContents = productModal.querySelectorAll('.tab-content');
@@ -1287,7 +1606,7 @@
         
         function renderCartItems() {
             if (cart.length === 0) {
-                cartItemsContainer.innerHTML = `<p class="text-center text-gray-500 py-8">עגלת ההזמנות ריקה.</p>`;
+                cartItemsContainer.innerHTML = `<p class="text-center text-gray-500 py-8 text-lg">עגלת ההזמנות ריקה.</p>`;
                 return;
             }
             cartItemsContainer.innerHTML = `
@@ -1297,15 +1616,15 @@
                             <div class="flex items-center">
                                 <img src="${item.image || `https://placehold.co/100x100/E0F2F7/2563EB?text=img`}" class="w-16 h-16 rounded-lg object-cover mr-4" onerror="this.src='https://placehold.co/100x100/E0F2F7/2563EB?text=Image+Not+Found'">
                                 <div>
-                                    <p class="font-bold text-blue-800">${item.name}</p>
+                                    <p class="font-bold text-blue-800 text-lg">${item.name}</p>
                                     <p class="text-sm text-gray-500">${item.brand}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4 space-x-reverse">
-                                 <button class="quantity-change font-bold text-lg text-blue-600 hover:text-blue-800" data-id="${item.id}" data-change="-1">-</button>
-                                 <span class="font-semibold text-lg text-blue-800">${item.quantity}</span>
-                                 <button class="quantity-change font-bold text-lg text-blue-600 hover:text-blue-800" data-id="${item.id}" data-change="1">+</button>
-                                 <button class="remove-item text-red-500 hover:text-red-700" data-id="${item.id}">🗑️</button>
+                                 <button class="quantity-change font-bold text-xl text-blue-600 hover:text-blue-800" data-id="${item.id}" data-change="-1">-</button>
+                                 <span class="font-semibold text-xl text-blue-800">${item.quantity}</span>
+                                 <button class="quantity-change font-bold text-xl text-blue-600 hover:text-blue-800" data-id="${item.id}" data-change="1">+</button>
+                                 <button class="remove-item text-red-500 hover:text-red-700 text-xl" data-id="${item.id}">🗑️</button>
                             </div>
                         </div>
                     `).join('')}
@@ -1350,6 +1669,7 @@
         closeProjectAdvisorModal.addEventListener('click', () => {
             projectAdvisorModal.classList.add('hidden');
             clearInterval(typingInterval); // Stop any ongoing typing effect
+            hideKeyboard(); // Ensure keyboard is hidden when advisor modal closes
         });
 
         scanBarcodeButton.addEventListener('click', () => {
@@ -1358,13 +1678,13 @@
                 const product = products.find(p => p.id.toString() === barcode.trim());
                 if (product) {
                     const indexInFullList = products.indexOf(product);
-                    currentFilteredProducts = products;
+                    currentFilteredProducts = products; // Reset filtered products to full list for correct navigation
                     openProductModal(indexInFullList);
                 } else {
                     // Using a custom alert-like message instead of window.alert
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-lg shadow-xl z-[9999]';
-                    msgDiv.textContent = `מוצר עם ברקוד ${barcode} לא נמצא.`;
+                    msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-lg shadow-xl z-[9999] text-xl';
+                    msgDiv.textContent = `מוצר עם ברקוד ${barcode} לא נמצא. 😔`;
                     document.body.appendChild(msgDiv);
                     setTimeout(() => msgDiv.remove(), 3000);
                 }
@@ -1375,8 +1695,8 @@
             e.preventDefault();
             if(cart.length === 0) {
                 const msgDiv = document.createElement('div');
-                msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-lg shadow-xl z-[9999]';
-                msgDiv.textContent = "עגלת ההזמנות ריקה. לא ניתן לשלוח בקשה.";
+                msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-lg shadow-xl z-[9999] text-xl';
+                msgDiv.textContent = "עגלת ההזמנות ריקה. לא ניתן לשלוח בקשה. 🛒";
                 document.body.appendChild(msgDiv);
                 setTimeout(() => msgDiv.remove(), 3000);
                 return;
@@ -1405,8 +1725,8 @@
             window.open(whatsappUrl, '_blank');
 
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white p-4 rounded-lg shadow-xl z-[9999]';
-            msgDiv.textContent = "הבקשה להזמנה נשלחה בהצלחה לוואטסאפ! נציג ייצור עמך קשר בהקדם.";
+            msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white p-4 rounded-lg shadow-xl z-[9999] text-xl';
+            msgDiv.textContent = "הבקשה להזמנה נשלחה בהצלחה לוואטסאפ! נציג ייצור עמך קשר בהקדם. ✅";
             document.body.appendChild(msgDiv);
             setTimeout(() => msgDiv.remove(), 3000);
 
@@ -1429,18 +1749,31 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const result = await response.json();
+
+                if (!response.ok) { // Check for HTTP errors (e.g., 400, 500)
+                    const errorText = await response.text();
+                    console.error("Gemini API call failed with status:", response.status, "Response text:", errorText);
+                    return "אירעה שגיאה בקבלת הייעוץ מהשרת. אנא נסה שוב מאוחר יותר. 😔";
+                }
+
+                const result = await response.json(); // This is where "Unexpected end of input" might occur
 
                 if (result.candidates && result.candidates.length > 0 &&
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text;
+                    const responseText = result.candidates[0].content.parts[0].text;
+                    if (typeof responseText === 'string') {
+                        return responseText;
+                    } else {
+                        console.error("LLM response part is not a string:", responseText);
+                        return "אירעה שגיאה בפורמט התשובה מהיועץ. נסה שוב מאוחר יותר. 😔";
+                    }
                 } else {
-                    console.error("LLM response structure unexpected:", result);
+                    console.error("LLM response structure unexpected or empty:", result);
                     return "אירעה שגיאה בקבלת הייעוץ. נסה שוב מאוחר יותר. 😔";
                 }
             } catch (error) {
-                console.error("Error calling Gemini API:", error);
+                console.error("Error calling Gemini API (network or JSON parsing error):", error);
                 return "אירעה שגיאה ברשת או בשרת. אנא נסה שוב. 🌐";
             }
         }
@@ -1608,6 +1941,7 @@
             addMessageToChat('user', userQuery);
             chatHistory.push({ role: "user", parts: [{ text: userQuery }] });
             projectAdvisorInput.value = ""; // Clear input after sending
+            hideKeyboard(); // Hide keyboard after sending message
 
             // Show loading indicator
             advisorLoading.classList.remove('hidden');
@@ -1648,7 +1982,7 @@
             const imagesToDisplay = filterBranch === 'all' ? storeImages : storeImages.filter(img => img.branch === filterBranch);
 
             if (imagesToDisplay.length === 0) {
-                galleryImageContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full">אין תמונות זמינות עבור סניף זה.</p>`;
+                galleryImageContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full text-xl py-10">אין תמונות זמינות עבור סניף זה.</p>`;
                 return;
             }
 
@@ -1657,7 +1991,7 @@
                 imgCard.className = 'gallery-image-card';
                 imgCard.innerHTML = `
                     <img src="${image.src}" alt="${image.alt}" onerror="this.src='https://placehold.co/600x400/E0F2F7/2563EB?text=תמונה+לא+נמצאה'">
-                    <p class="p-2 text-sm font-semibold text-blue-800">${image.alt}</p>
+                    <p class="p-2 text-base font-semibold text-blue-800">${image.alt}</p>
                 `;
                 galleryImageContainer.appendChild(imgCard);
             });
@@ -1668,6 +2002,7 @@
             renderGalleryImages('all'); // Show all by default
             document.querySelectorAll('.active-filter-btn').forEach(btn => btn.classList.remove('active-filter-btn'));
             document.querySelector('[data-branch-filter="all"]').classList.add('active-filter-btn');
+            hideKeyboard(); // Hide keyboard when gallery opens
         });
 
         closeGalleryModal.addEventListener('click', () => {
@@ -1706,6 +2041,24 @@
             }
         }
 
+        // --- Keyboard Focus Listeners ---
+        searchInput.addEventListener('focus', () => showKeyboard(searchInput));
+        projectAdvisorInput.addEventListener('focus', () => showKeyboard(projectAdvisorInput));
+        customerNameInput.addEventListener('focus', () => showKeyboard(customerNameInput));
+        customerPhoneInput.addEventListener('focus', () => showKeyboard(customerPhoneInput));
+        orderNotesInput.addEventListener('focus', () => showKeyboard(orderNotesInput));
+
+        // Close keyboard if user clicks outside of any input or keyboard
+        document.addEventListener('click', (e) => {
+            const isClickInsideKeyboard = virtualKeyboard.contains(e.target);
+            const isClickInsideInput = (activeInput && activeInput.contains(e.target));
+            
+            if (!isClickInsideKeyboard && !isClickInsideInput && virtualKeyboard.classList.contains('active')) {
+                hideKeyboard();
+            }
+        });
+        // --- End Keyboard Focus Listeners ---
+
         // Load marked.js for Markdown parsing in chat responses
         const markedScript = document.createElement('script');
         markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
@@ -1713,7 +2066,7 @@
              // After marked.js is loaded, set up the renderer
             const renderer = {
                 table(header, body) {
-                    return `<table class="min-w-full"><thead>${header}</thead><tbody>${body}</tbody></table>`;
+                    return `<table class="min-w-full text-lg"><thead>${header}</thead><tbody>${body}</tbody></table>`;
                 },
                 tablerow(content) {
                     return `<tr>${content}</tr>`;
@@ -1726,7 +2079,14 @@
                     return `<strong>${text}</strong>`;
                 },
                 paragraph(text) {
-                    return `<p class="mb-2">${text}</p>`;
+                    return `<p class="mb-2 text-lg">${text}</p>`;
+                },
+                list(body, ordered) {
+                    const tag = ordered ? 'ol' : 'ul';
+                    return `<${tag} class="list-${ordered ? 'decimal' : 'disc'} pr-5 space-y-1 text-lg">${body}</${tag}>`;
+                },
+                listitem(text) {
+                    return `<li class="text-lg">${text}</li>`;
                 }
             };
 
@@ -1780,6 +2140,7 @@
             setupFilters();
             updateCart();
             typeWriter();
+            renderKeyboard(); // Initial keyboard render
             renderChatHistory(); // Render initial chat history
             renderGalleryImages('all'); // Initial render of gallery
         });
@@ -1787,3 +2148,4 @@
     </script>
 </body>
 </html>
+�
