@@ -13,6 +13,9 @@
         - Advanced Product Advisor (LLM Feature - Major Update): Goal -> Concise, precise, interactive AI advice with chat memory. Viz/Presentation -> Dedicated modal (light blue/white glassmorphism) with typing effect, emojis, and dynamic buttons for follow-up questions ("הרחב", "מוצרים נלווים"). The modal features a sophisticated POPUP behavior for opening/closing. Interaction -> User query, AI responds briefly, then prompts for deeper engagement. Chat history persists across modal openings. Justification -> Addresses previous feedback for conciseness and adds significant interactivity and depth to AI consultation.
         - WhatsApp Ordering: Goal -> Streamlined submission. Viz/Presentation -> Standard cart modal leading to a WhatsApp link. Interaction -> User fills form, redirects to WhatsApp. Justification -> Simplified ordering process.
         - Image Fetching: Goal -> Display richer product images. Viz/Presentation -> Dynamically loaded images from Google Search in product cards and modals. Interaction -> Automatic. Justification -> Enhances visual appeal and product representation.
+        - Brand Logos: Goal -> Display brand logos. Viz/Presentation -> Small logo on product cards and in product modal. Interaction -> Passive display. Justification -> Visual identification of brands.
+        - Company Logo: Goal -> Display H.Saban logo. Viz/Presentation -> Prominently placed in header. Interaction -> Passive display. Justification -> Branding.
+        - Branch Gallery: Goal -> Showcase store images. Viz/Presentation -> New modal with grid layout, filter buttons. Interaction -> Open modal, filter images. Justification -> Provides visual context for branches.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <title>קטלוג פרימיום אינטראקטיבי - ח.סבן חומרי בניין</title>
@@ -153,20 +156,37 @@
         tr:nth-child(even) {
             background-color: rgba(240, 248, 255, 0.5); /* Alice Blue subtle stripe */
         }
-
+        /* Gallery modal specific styles */
+        .gallery-modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(173, 216, 230, 0.7);
+            @apply rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col;
+        }
+        .gallery-image-card {
+            @apply bg-white rounded-lg shadow-md overflow-hidden border border-blue-100;
+        }
+        .gallery-image-card img {
+            @apply w-full h-40 object-cover;
+        }
     </style>
 </head>
 <body class="main-container">
 
     <div id="app" class="min-h-screen">
         <header class="glass-effect shadow-md p-4 flex justify-between items-center sticky top-0 z-40">
-            <h1 class="text-3xl font-bold text-blue-800">ח.סבן חומרי בניין</h1>
+            <div class="flex items-center">
+                <img src="https://placehold.co/80x80/000000/FFFFFF?text=ח.סבן+לוגו" alt="ח.סבן לוגו" class="h-16 w-16 mr-3 rounded-full object-cover">
+                <h1 class="text-3xl font-bold text-blue-800">ח.סבן חומרי בניין</h1>
+            </div>
             <div class="flex items-center space-x-4 space-x-reverse">
                 <div class="relative">
                     <input id="searchInput" type="text" placeholder="הקלד לחיפוש מוצר..." class="w-64 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 glass-effect">
                     <span id="searchIcon" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 </div>
                 <button id="projectAdvisorButton" class="btn-secondary">✨ יועץ מוצר מתקדם ✨</button>
+                <button id="showGalleryButton" class="btn-secondary">🖼️ גלריית סניפים</button>
                 <button id="cartButton" class="relative btn-secondary">
                     🛒
                     <span id="cartCount" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">0</span>
@@ -254,6 +274,27 @@
         </div>
     </div>
 
+    <div id="galleryModal" class="modal hidden">
+        <div class="modal-content-wrapper w-full max-w-5xl">
+            <div class="gallery-modal-content">
+                <header class="advisor-modal-header flex justify-between items-center">
+                    <h2 class="text-3xl font-bold text-white">🖼️ גלריית סניפים</h2>
+                    <button id="closeGalleryModal" class="text-3xl font-bold text-white hover:text-red-300 transition-colors">&times;</button>
+                </header>
+                <div class="p-6 flex flex-col flex-grow overflow-hidden">
+                    <div class="flex justify-center mb-6 gap-3">
+                        <button data-branch-filter="all" class="btn-secondary active-filter-btn">הכל</button>
+                        <button data-branch-filter="החרש" class="btn-secondary">סניף החרש</button>
+                        <button data-branch-filter="התלמיד" class="btn-secondary">סניף התלמיד</button>
+                    </div>
+                    <div id="galleryImageContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-grow">
+                        <!-- Gallery images will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Use google_search tool to fetch product images.
         // Product data will be enhanced with image URLs from the internet.
@@ -267,6 +308,7 @@
                 id: 1,
                 name: "תרמוקיר טיח תרמי 300",
                 brand: "תרמוקיר",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Logotipo_Thermokir.png/200px-Logotipo_Thermokir.png",
                 category: "טיח",
                 description: "טיח תרמי איכותי לבידוד תרמי של מבנים, עומד בתקנים מחמירים.",
                 specs: {
@@ -302,6 +344,7 @@
                 id: 2,
                 name: "תרמוקיר דבק AD 603",
                 brand: "תרמוקיר",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Logotipo_Thermokir.png/200px-Logotipo_Thermokir.png",
                 category: "דבקים לריצוף",
                 description: "דבק צמנטי גמיש להדבקת אריחים, סיווג C2TE S1.",
                 specs: {
@@ -336,6 +379,7 @@
                 id: 3,
                 name: "כרמית דבק גמיש 116",
                 brand: "כרמית מיסטר פיקס",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Karmit_logo.svg/320px-Karmit_logo.svg.png",
                 category: "דבקים לריצוף",
                 description: "דבק צמנטי גמיש במיוחד להדבקת כל סוגי האריחים, סיווג C2TE-S1.",
                 specs: {
@@ -349,7 +393,7 @@
                     "לערבב 8-8.5 ליטר מים עם שק 25 ק\"ג.",
                     "על תשתיות לא סופגות, יש ליישם פריימר 82-P ולהמתין 90 דקות.",
                     "למרוח 100% כיסוי על גב האריח.",
-                    "להצמיד לתשתית, לטלטל ולהדק עם פטיש גומי."
+                    "להצמיד את האריח בשיטת 'רטוב על רטוב' ולהדק."
                 ],
                 drying: {
                     "זמן שמישות לעבודה": "עד 3 שעות",
@@ -370,6 +414,7 @@
                 id: 4,
                 name: "טמבור טיח צמנטי 984",
                 brand: "טמבור",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Tambour_logo.svg/320px-Tambour_logo.svg.png",
                 category: "טיח",
                 description: "טיח על בסיס צמנט ליישור קירות ותקרות במרחבים מוגנים (ממ\"ד).",
                 specs: {
@@ -399,6 +444,7 @@
                 id: 5,
                 name: "נירלט שליכט EXTRA M100",
                 brand: "נירלט",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Nirlat_logo.svg/320px-Nirlat_logo.svg.png",
                 category: "טיח",
                 description: "שליכט אקרילי גמיש בגימור מט, עמיד בתנאי אקלים קשים.",
                 specs: {
@@ -428,6 +474,7 @@
                 id: 6,
                 name: "בוש מברגה/מקדחה GSB 185-LI",
                 brand: "בוש",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Bosch_logo.svg/320px-Bosch_logo.svg.png",
                 category: "כלי עבודה",
                 description: "מברגה/מקדחה רוטטת נטענת, 18V, קומפקטית עם מנוע ללא פחמים.",
                 specs: {
@@ -449,6 +496,7 @@
                 id: 7,
                 name: "מקיטה אימפקט DTD152Z",
                 brand: "מקיטה",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Makita_logo.svg/320px-Makita_logo.svg.png",
                 category: "כלי עבודה",
                 description: "מברגת אימפקט 18V חזקה ואמינה לעבודות מאומצות (גוף בלבד).",
                 specs: {
@@ -470,6 +518,7 @@
                 id: 8,
                 name: "טמבור לוח גבס לבן",
                 brand: "טמבור",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Tambour_logo.svg/320px-Tambour_logo.svg.png",
                 category: "מוצרי גבס",
                 description: "לוח גבס סטנדרטי לבניית מחיצות, תקרות וחיפויים בבנייה קלה.",
                 specs: {
@@ -489,6 +538,7 @@
                 id: 9,
                 name: "תרמוקיר רובה SAKRET JF 930",
                 brand: "תרמוקיר",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Logotipo_Thermokir.png/200px-Logotipo_Thermokir.png",
                 category: "רובה",
                 description: "רובה אקרילית איכותית למילוי מישקים ברוחב 3-10 מ\"מ, סיווג CG2 WA.",
                 specs: {
@@ -524,6 +574,7 @@
                 id: 10,
                 name: "סיקה Sikaflex-11 FC+",
                 brand: "סיקה",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Sika_AG_logo.svg/320px-Sika_AG_logo.svg.png",
                 category: "איטום",
                 description: "דבק-איטום פוליאוריטני רב תכליתי, עמיד בפני תזוזות ותנאי חוץ.",
                 specs: {
@@ -549,6 +600,7 @@
                 id: 11,
                 name: "סיקה SikaTop Seal-107",
                 brand: "סיקה",
+                brand_logo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Sika_AG_logo.svg/320px-Sika_AG_logo.svg.png",
                 category: "איטום",
                 description: "מערכת איטום צמנטית דו-רכיבית, גמישה במקצת, לאיטום והגנה על בטון.",
                 specs: {
@@ -579,6 +631,7 @@
                 id: 12,
                 name: "חמת ברז מטבח נשלף סיטי",
                 brand: "חמת",
+                brand_logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz-S4X7_S4z_D1h-j_z2sS1C2v2g7Qy1y_wQ&s",
                 category: "ברזים",
                 description: "ברז יוקרתי לכיור מטבח מבית חמת, עיצוב מודרני, פיה נשלפת וגימור ניקל מוברש.",
                 specs: {
@@ -601,6 +654,7 @@
                 id: 13,
                 name: "חמת סט אינטרפוץ 4 דרך",
                 brand: "חמת",
+                brand_logo_url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz-S4X7_S4z_D1h-j_z2sS1C2v2g7Qy1y_wQ&s",
                 category: "אינסטלציה",
                 description: "סט מקלחת יוקרתי הכולל ראש גשם, מזלף ידני, ברז סוללה ואינטרפוץ 4 דרך.",
                 specs: {
@@ -623,6 +677,7 @@
                 id: 14,
                 name: "חול ים (למילוי/בנייה)",
                 brand: "כללי",
+                brand_logo_url: "", // No specific logo for "general"
                 category: "חומרי בניין בצובר",
                 description: "חול ים נקי ואיכותי למילוי, יציקות בטון, טיח ותשתיות ריצוף. נמכר בנפח של מעל 0.5 קוב.",
                 specs: {
@@ -651,6 +706,7 @@
                 id: 15,
                 name: "סומסום (תשתית)",
                 brand: "כללי",
+                brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "סומסום - חצץ דק בגודל 0-4 מ\"מ, אידיאלי לתשתיות ריצוף וניקוז. נמכר בנפח של מעל 0.5 קוב.",
                 specs: {
@@ -679,6 +735,7 @@
                 id: 16,
                 name: "חצץ (בטון/ניקוז)",
                 brand: "כללי",
+                brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "חצץ נקי בגדלים שונים, אידיאלי ליציקות בטון, ניקוז ומילוי. נמכר בנפח של מעל 0.5 קוב.",
                 specs: {
@@ -707,6 +764,7 @@
                 id: 17,
                 name: "טיט מוכן",
                 brand: "כללי",
+                brand_logo_url: "",
                 category: "חומרי בניין בצובר",
                 description: "טיט צמנטי מוכן לשימוש (יבש), מתאים לטיח, ריצוף ובנייה. נמכר בנפח של מעל 0.5 קוב.",
                 specs: {
@@ -740,6 +798,7 @@
                 id: 18,
                 name: "מריצה ידנית",
                 brand: "כללי",
+                brand_logo_url: "",
                 category: "כלי עבודה",
                 description: "מריצה ידנית חזקה ועמידה, אידיאלית להובלת חומרי בניין באתר.",
                 specs: {
@@ -755,6 +814,7 @@
                 id: 19,
                 name: "מגב גומי לרובה",
                 brand: "כללי",
+                brand_logo_url: "",
                 category: "כלי עבודה",
                 description: "מגב גומי מקצועי ליישום והחלקת רובה, מונע שריטות ומבטיח מילוי אחיד של המישקים.",
                 specs: {
@@ -770,6 +830,18 @@
                 related_products_ids: [9] // רובה
             }
         ];
+
+        // Store images for the gallery
+        const storeImages = [
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+החרש+1', alt: 'סניף החרש - תמונה 1', branch: 'החרש' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+החרש+2', alt: 'סניף החרש - תמונה 2', branch: 'החרש' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+החרש+3', alt: 'סניף החרש - תמונה 3', branch: 'החרש' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+1', alt: 'סניף התלמיד - תמונה 1', branch: 'התלמיד' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+2', alt: 'סניף התלמיד - תמונה 2', branch: 'התלמיד' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+3', alt: 'סניף התלמיד - תמונה 3', branch: 'התלמיד' },
+            { src: 'https://placehold.co/600x400/ADD8E6/2563EB?text=סניף+התלמיד+4', alt: 'סניף התלמיד - תמונה 4', branch: 'התלמיד' },
+        ];
+
 
         const app = document.getElementById('app');
         const productGrid = document.getElementById('productGrid');
@@ -797,6 +869,12 @@
         const projectAdvisorInput = document.getElementById('projectAdvisorInput');
         const advisorChatHistoryDiv = document.getElementById('advisorChatHistory');
         const advisorLoading = document.getElementById('advisorLoading');
+
+        const showGalleryButton = document.getElementById('showGalleryButton');
+        const galleryModal = document.getElementById('galleryModal');
+        const closeGalleryModal = document.getElementById('closeGalleryModal');
+        const galleryImageContainer = document.getElementById('galleryImageContainer');
+
 
         let activeFilters = { category: [], brand: [] };
         let cart = [];
@@ -857,14 +935,14 @@
                     product.image = imageUrl; // Update the product object with fetched image
                     
                     // Update the specific card's image
-                    const cardImage = productCards[i]?.querySelector('img');
+                    const cardImage = productCards[i]?.querySelector('.product-main-image');
                     if (cardImage) {
                         cardImage.src = imageUrl;
                         cardImage.onerror = null; // Remove onerror to prevent infinite loops if the fetched URL is bad
                     }
                 } else {
                     product.image = imageUrlCache[product.id];
-                    const cardImage = productCards[i]?.querySelector('img');
+                    const cardImage = productCards[i]?.querySelector('.product-main-image');
                     if (cardImage) {
                         cardImage.src = imageUrlCache[product.id];
                         cardImage.onerror = null;
@@ -885,10 +963,13 @@
                 card.className = 'product-card';
                 card.dataset.filteredIndex = index;
                 card.innerHTML = `
-                    <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="w-full h-56 object-cover" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
-                    <div class="p-5">
-                        <span class="text-sm text-gray-500">${product.brand}</span>
-                        <h3 class="font-bold text-xl mt-1 truncate text-blue-800">${product.name}</h3>
+                    <img src="${product.image || `https://placehold.co/400x300/E0F2F7/2563EB?text=${encodeURIComponent(product.name)}`}" alt="${product.name}" class="w-full h-40 object-cover product-main-image" onerror="this.src='https://placehold.co/400x300/E0F2F7/2563EB?text=Image+Not+Found'">
+                    <div class="p-4 flex items-center justify-between">
+                        <div>
+                            <span class="text-sm text-gray-500">${product.brand}</span>
+                            <h3 class="font-bold text-xl mt-1 truncate text-blue-800">${product.name}</h3>
+                        </div>
+                        ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-12 h-12 object-contain ml-2" onerror="this.src='https://placehold.co/48x48/CCCCCC/333333?text=Logo'">` : ''}
                     </div>
                 `;
                 productGrid.appendChild(card);
@@ -939,7 +1020,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="mb-2 col-span-2">
                             <label for="calcArea" class="block text-blue-700 text-sm font-bold mb-2">שטח ריצוף במ"ר:</label>
-                            <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border-blue-300">
+                            <input type="number" id="calcArea" value="10" min="0.1" step="0.1" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 border-blue-300">
                         </div>
                         <div class="mb-2">
                             <label for="calcTileLength" class="block text-blue-700 text-sm font-bold mb-2">אורך אריח (מ"מ):</label>
@@ -1050,7 +1131,10 @@
                 <div class="modal-content">
                     <header class="p-6 border-b border-white border-opacity-40 flex justify-between items-start">
                         <div>
-                            <span class="text-lg text-gray-600">${product.brand}</span>
+                            <span class="text-lg text-gray-600 flex items-center">
+                                ${product.brand_logo_url ? `<img src="${product.brand_logo_url}" alt="${product.brand} logo" class="w-8 h-8 object-contain mr-2" onerror="this.src='https://placehold.co/32x32/CCCCCC/333333?text=Logo'">` : ''}
+                                ${product.brand}
+                            </span>
                             <h2 class="text-4xl font-bold text-blue-800">${product.name}</h2>
                         </div>
                         <button id="closeModal" class="text-4xl font-bold text-gray-500 hover:text-red-500 transition-colors">&times;</button>
@@ -1552,6 +1636,49 @@
         searchInput.addEventListener('input', applyFilters);
         cartItemsContainer.addEventListener('click', handleCartInteraction);
 
+        // --- Gallery Modal Logic ---
+        function renderGalleryImages(filterBranch = 'all') {
+            galleryImageContainer.innerHTML = '';
+            const imagesToDisplay = filterBranch === 'all' ? storeImages : storeImages.filter(img => img.branch === filterBranch);
+
+            if (imagesToDisplay.length === 0) {
+                galleryImageContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full">אין תמונות זמינות עבור סניף זה.</p>`;
+                return;
+            }
+
+            imagesToDisplay.forEach(image => {
+                const imgCard = document.createElement('div');
+                imgCard.className = 'gallery-image-card';
+                imgCard.innerHTML = `
+                    <img src="${image.src}" alt="${image.alt}" onerror="this.src='https://placehold.co/600x400/E0F2F7/2563EB?text=תמונה+לא+נמצאה'">
+                    <p class="p-2 text-sm font-semibold text-blue-800">${image.alt}</p>
+                `;
+                galleryImageContainer.appendChild(imgCard);
+            });
+        }
+
+        showGalleryButton.addEventListener('click', () => {
+            galleryModal.classList.remove('hidden');
+            renderGalleryImages('all'); // Show all by default
+            document.querySelectorAll('.active-filter-btn').forEach(btn => btn.classList.remove('active-filter-btn'));
+            document.querySelector('[data-branch-filter="all"]').classList.add('active-filter-btn');
+        });
+
+        closeGalleryModal.addEventListener('click', () => {
+            galleryModal.classList.add('hidden');
+        });
+
+        galleryModal.querySelectorAll('.btn-secondary[data-branch-filter]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const branch = e.target.dataset.branchFilter;
+                renderGalleryImages(branch);
+                galleryModal.querySelectorAll('.active-filter-btn').forEach(btn => btn.classList.remove('active-filter-btn'));
+                e.target.classList.add('active-filter-btn');
+            });
+        });
+        // --- End Gallery Modal Logic ---
+
+
         // Typing effect for search placeholder
         const placeholderText = "חיפוש לפי שם, מותג, תיאור...";
         let i = 0;
@@ -1572,6 +1699,52 @@
                  }, 500);
             }
         }
+
+        // Load marked.js for Markdown parsing in chat responses
+        const markedScript = document.createElement('script');
+        markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+        markedScript.onload = () => {
+             // After marked.js is loaded, set up the renderer
+            const renderer = {
+                table(header, body) {
+                    return `<table class="min-w-full"><thead>${header}</thead><tbody>${body}</tbody></table>`;
+                },
+                tablerow(content) {
+                    return `<tr>${content}</tr>`;
+                },
+                tablecell(content, flags) {
+                    const tag = flags.header ? 'th' : 'td';
+                    return `<${tag}>${content}</${tag}>`;
+                },
+                strong(text) {
+                    return `<strong>${text}</strong>`;
+                },
+                paragraph(text) {
+                    return `<p class="mb-2">${text}</p>`;
+                }
+            };
+
+            if (typeof marked !== 'undefined' && typeof marked.use === 'function') {
+                marked.use({ renderer });
+            } else if (typeof marked !== 'undefined' && typeof marked.Renderer !== 'undefined') {
+                const defaultRenderer = new marked.Renderer();
+                for (const prop in renderer) {
+                    if (renderer.hasOwnProperty(prop)) {
+                        defaultRenderer[prop] = renderer[prop];
+                    }
+                }
+                marked.setOptions({ renderer: defaultRenderer });
+            } else {
+                console.warn("Marked.js is not loaded or is an unsupported version. Markdown rendering might not work as expected.");
+            }
+             // Initial render of chat history after marked.js is ready
+            projectAdvisorModal.addEventListener('transitionend', () => {
+                if (!projectAdvisorModal.classList.contains('hidden')) {
+                    renderChatHistory();
+                }
+            }, { once: true }); // Only run once per open
+        };
+        document.head.appendChild(markedScript);
 
         // Initialize chat history display when modal opens
         function renderChatHistory() {
@@ -1595,73 +1768,6 @@
             advisorChatHistoryDiv.scrollTop = advisorChatHistoryDiv.scrollHeight;
         }
 
-        // Override default marked.js renderer to handle tables.
-        // This is necessary because marked.js outputs raw HTML for tables,
-        // and we want to apply Tailwind classes to them.
-        const renderer = {
-            table(header, body) {
-                return `<table class="min-w-full"><thead>${header}</thead><tbody>${body}</tbody></table>`;
-            },
-            tablerow(content) {
-                return `<tr>${content}</tr>`;
-            },
-            tablecell(content, flags) {
-                const tag = flags.header ? 'th' : 'td';
-                return `<${tag}>${content}</${tag}>`;
-            },
-            // Add other render overrides if needed for specific formatting
-            strong(text) {
-                return `<strong>${text}</strong>`;
-            },
-            paragraph(text) {
-                return `<p class="mb-2">${text}</p>`;
-            }
-        };
-
-        // marked.use is for the new marked 4.x+ API.
-        // If marked is an older version, direct assignment to marked.Renderer might be needed.
-        if (typeof marked !== 'undefined' && typeof marked.use === 'function') {
-            marked.use({ renderer });
-        } else if (typeof marked !== 'undefined' && typeof marked.Renderer !== 'undefined') {
-            const defaultRenderer = new marked.Renderer();
-            for (const prop in renderer) {
-                if (renderer.hasOwnProperty(prop)) {
-                    defaultRenderer[prop] = renderer[prop];
-                }
-            }
-            marked.setOptions({ renderer: defaultRenderer });
-        } else {
-            console.warn("Marked.js is not loaded or is an unsupported version. Markdown rendering might not work as expected.");
-        }
-
-
-        // Load marked.js for Markdown parsing in chat responses
-        const markedScript = document.createElement('script');
-        markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
-        markedScript.onload = () => {
-             // After marked.js is loaded, set up the renderer
-            if (typeof marked !== 'undefined' && typeof marked.use === 'function') {
-                marked.use({ renderer });
-            } else if (typeof marked !== 'undefined' && typeof marked.Renderer !== 'undefined') {
-                const defaultRenderer = new marked.Renderer();
-                for (const prop in renderer) {
-                    if (renderer.hasOwnProperty(prop)) {
-                        defaultRenderer[prop] = renderer[prop];
-                    }
-                }
-                marked.setOptions({ renderer: defaultRenderer });
-            } else {
-                console.warn("Marked.js is not loaded or is an unsupported version. Markdown rendering might not work as expected.");
-            }
-             // Initial render of chat history after marked.js is ready
-            projectAdvisorModal.addEventListener('transitionend', () => {
-                if (!projectAdvisorModal.classList.contains('hidden')) {
-                    renderChatHistory();
-                }
-            }, { once: true }); // Only run once per open
-        };
-        document.head.appendChild(markedScript);
-
 
         document.addEventListener('DOMContentLoaded', async () => {
             await populateProductImages(); // Fetch and set images
@@ -1669,6 +1775,7 @@
             updateCart();
             typeWriter();
             renderChatHistory(); // Render initial chat history
+            renderGalleryImages('all'); // Initial render of gallery
         });
 
     </script>
